@@ -19,6 +19,18 @@ export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 
+		// Common headers for CORS
+		const headers = new Headers({
+			"Access-Control-Allow-Origin": "*",           // allow all origins (dev)
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+		});
+
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return new Response(null, { status: 204, headers });
+		}
+
 		// Handle form submissions
 		if (url.pathname === "/subscribe" && request.method === "POST") {
 			let email: string | undefined;
@@ -27,11 +39,11 @@ export default {
 				const body = await request.json() as { email?: string };
 				email = body.email;
 			} catch {
-				return new Response("Invalid JSON", { status: 400 });
+				return new Response("Invalid JSON", { status: 400, headers });
 			}
 
 			if (!email || !email.includes("@")) {
-				return new Response("Invalid email", { status: 400 });
+				return new Response("Invalid email", { status: 400, headers });
 			}
 
 			try {
@@ -39,12 +51,12 @@ export default {
 					"INSERT INTO subscribers (email) VALUES (?)"
 				).bind(email).run();
 
-				return new Response("Subscribed!", { status: 200 });
+				return new Response("Subscribed!", { status: 200, headers });
 			} catch (err: any) {
 				if (err.message?.includes("UNIQUE")) {
-					return new Response("Already subscribed", { status: 409 });
+					return new Response("Already subscribed", { status: 409, headers });
 				}
-				return new Response("Error saving", { status: 500 });
+				return new Response("Error saving", { status: 500, headers });
 			}
 		}
 
