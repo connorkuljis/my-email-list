@@ -60,14 +60,6 @@ export default {
 			}
 		}
 
-		// Endpoint to list subscribers (protect this later)
-		if (url.pathname === "/subscribers") {
-			const result = await env.DB.prepare(
-				"SELECT id, email, created_at FROM subscribers ORDER BY created_at DESC"
-			).all();
-			return Response.json(result.results);
-		}
-
 		// Default response
 		return new Response("Email List Worker running");
 	}
